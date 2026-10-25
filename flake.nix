@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable-small";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   };
   outputs =
     {
@@ -27,6 +27,7 @@
             with pkgs;
             mkShell {
               nativeBuildInputs = [
+                actionlint
                 cargo
                 clippy
                 direnv
@@ -37,6 +38,7 @@
                 rustc
                 rustfmt
                 yamlfmt
+                zizmor
               ];
               buildInputs = [
                 openssl

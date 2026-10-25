@@ -2,6 +2,7 @@ amends "package://github.com/jdx/hk/releases/download/v2.8.1/hk@2.8.1#/Config.pk
 import "package://github.com/jdx/hk/releases/download/v2.8.1/hk@2.8.1#/Builtins.pkl"
 
 local builtins = new Mapping<String, Step> {
+  ["actionlint"] = Builtins.actionlint
   ["cargo-check"] = Builtins.cargo_check
   ["cargo-clippy"] = Builtins.cargo_clippy
   ["cargo-fmt"] = Builtins.cargo_fmt
@@ -11,6 +12,7 @@ local builtins = new Mapping<String, Step> {
   ["nix-fmt"] = Builtins.nix_fmt
   ["trailing-whitespace"] = Builtins.trailing_whitespace
   ["yamlfmt"] = Builtins.yamlfmt
+  ["zizmor"] = Builtins.zizmor
 }
 
 local local_hooks = new Mapping<String, Step> {

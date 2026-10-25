@@ -1,0 +1,72 @@
+name: Bug report
+description: Something does not work as documented.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem.
+        **Do not report security vulnerabilities here.** Follow the [security policy](https://github.com/The-Mod-Elephant/weidu-rebuild/security/policy) instead.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A clear, concise description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands you ran and, if relevant, which mod and game files were involved.
+      placeholder: |
+        1. iemod doctor --game "/path/to/game"
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: iemod version
+      description: Output of `iemod --version`.
+      placeholder: iemod 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other (describe below)
+    validations:
+      required: true
+  - type: input
+    id: game
+    attributes:
+      label: Game and edition
+      description: For example the game title, edition and version, and where it was installed from.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output
+      description: The complete terminal output, including the exit status (`echo $?` or `echo %ERRORLEVEL%`). It is formatted automatically.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the existing issues and this has not been reported yet.
+          required: true
+        - label: I removed personal information (user names, paths I do not want public) from the output.
+          required: true

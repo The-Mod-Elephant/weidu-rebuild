@@ -1,18 +1,55 @@
 name: lint
 on:
   pull_request:
+    # `edited` re-checks the title, which becomes the squash-merge commit.
+    types: [opened, edited, reopened, synchronize]
+  push:
+    branches: [main]
+  schedule:
+    # New RustSec advisories surface even without code changes (cargo-deny runs as an hk hook).
+    - cron: "17 4 * * 1"
+permissions: {}
+concurrency:
+  group: lint-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   pre-commit:
+    name: pre-commit
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read # check out the repository
     steps:
-      - uses: actions/checkout@v7
-      - uses: nixbuild/nix-quick-install-action@v35
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
       - name: nixcache
-        uses: nix-community/cache-nix-action@v7
+        uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7.0.2
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
           gc-max-store-size-linux: 5G
+          # Saved from main only: pull requests can restore main's caches, not each other's.
+          save: ${{ github.ref == 'refs/heads/main' }}
       - name: pre-commit
         shell: 'nix develop -c bash -e {0}'
+        env:
+          RUSTFLAGS: -D warnings
         run: env HK_FIX=0 hk run pre-commit --all --no-fail-fast --stash none
+      - name: Conventional commit title
+        if: github.event_name == 'pull_request'
+        shell: 'nix develop -c bash -e {0}'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Individual commits are checked by the commit-msg hook; the title is what lands on main.
+          printf '%s\n' "$PR_TITLE" > "$RUNNER_TEMP/title"
+          if ! out=$(hk util check-conventional-commit "$RUNNER_TEMP/title" 2>&1); then
+            echo "::error title=Pull request title is not a Conventional Commit::${out//$'\n'/ }"
+            exit 1
+          fi
+          if [ "${#PR_TITLE}" -gt 100 ]; then
+            echo "::error title=Pull request title too long::${#PR_TITLE} characters, the limit is 100"
+            exit 1
+          fi
