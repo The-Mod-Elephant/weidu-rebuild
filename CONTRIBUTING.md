@@ -52,6 +52,26 @@ which becomes the commit on `main` when squash-merging.
 Headers are at most 100 characters. A `!` after the type or a `BREAKING CHANGE:` footer marks a
 breaking change.
 
+## Versioning and releasing
+
+Versions follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html), and git tags
+named `vX.Y.Z` are the only version source. git-cliff (`cliff.toml`) computes the next version
+from the commits since the latest tag:
+
+- `feat` bumps the minor version; `fix`, `perf` and `revert` bump the patch version; the other
+  types bump nothing and are left out of the changelog.
+- A breaking change bumps the major version from 1.0.0 on, and the minor version while in 0.y.z.
+  Leaving 0.x is an explicit `major` bump.
+- The first release is `v0.1.0`.
+
+Releases are published only by `.github/workflows/release.yml`: run **Release** on `main`, first
+with `dry_run` enabled. It computes the version, generates `CHANGELOG.md`
+([Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)) and the release notes, builds and
+smoke-tests every platform, and, with `dry_run` disabled, tags the commit and publishes the
+release. Preview the result locally with `git cliff --bump` and `git cliff --bumped-version`.
+The changelog is not committed. The release gates are listed in
+[docs/release/READINESS.md](docs/release/READINESS.md).
+
 ## Continuous integration
 
 | Workflow | Check | Purpose |
