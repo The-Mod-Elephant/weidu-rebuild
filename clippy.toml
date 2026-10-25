@@ -1,0 +1,7 @@
+# Clippy configuration: https://doc.rust-lang.org/clippy/lint_configuration.html
+# The workspace warns on panicking shortcuts (Cargo.toml [workspace.lints.clippy]); tests are
+# allowed to use them because a panic is exactly how a test reports failure.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true

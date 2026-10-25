@@ -1,0 +1,39 @@
+# Cargo workspace for the iemod toolchain ("iemod" is a placeholder project name).
+#
+# Packages deliberately omit `version`: git tags are the only version source (CLAUDE.md), and a
+# manifest without `version` defaults to 0.0.0 and cannot be published by mistake (Cargo
+# reference, "The `version` field", MSRV 1.75). Release builds receive the real version through
+# the IEMOD_RELEASE_VERSION environment variable (see crates/iemod-cli/src/version.rs).
+
+[workspace]
+members = ["crates/*"]
+# Resolver 3 is the default for edition 2024 packages, but a virtual workspace has no edition of
+# its own, so it must be stated explicitly.
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+# Kept equal to the toolchain pinned in rust-toolchain.toml: that is the only compiler CI tests.
+rust-version = "1.99"
+license-file = "LICENSE"
+publish = false
+
+[workspace.lints.rust]
+# Memory safety is a product invariant (CLAUDE.md): no crate may opt out of it.
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+# Pedantic lints as warnings; CI turns every warning into an error with `-D warnings`.
+pedantic = { level = "warn", priority = -1 }
+# Panicking shortcuts are forbidden in library code paths that handle untrusted mod data.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+indexing_slicing = "warn"
+
+[profile.release]
+# Smaller, faster release binaries; symbols are not needed by end users.
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

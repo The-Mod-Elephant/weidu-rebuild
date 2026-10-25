@@ -1,0 +1,49 @@
+# cargo-deny configuration: https://embarkstudios.github.io/cargo-deny/
+# Run locally with `cargo deny check`; CI runs the same command (.github/workflows/ci.yml).
+
+[graph]
+# Evaluate exactly the targets release.yml ships, so platform-only dependencies (e.g. the
+# Windows API crates) are checked without dragging in targets nobody builds.
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+]
+
+[advisories]
+# RustSec advisories (vulnerabilities, unmaintained and unsound crates) fail the check. Any
+# ignore entry must cite the advisory ID and a justification in a comment.
+ignore = []
+
+[licenses]
+# The project is distributed under the GNU GPL version 3 (see LICENSE). Every allowed license
+# must be compatible with distributing the combined work under it; each entry below is listed by
+# the Free Software Foundation as GPLv3-compatible
+# (https://www.gnu.org/licenses/license-list.html). Extend the list only after the same check.
+allow = [
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "MIT",
+  "Unicode-3.0",
+]
+confidence-threshold = 0.93
+
+[licenses.private]
+# Workspace crates are unpublished (`publish = false`) and covered by the repository LICENSE.
+ignore = true
+
+[bans]
+# Duplicate versions cost build time and binary size; report them without failing, since they
+# usually come from upstream crates and resolve themselves through Dependabot updates.
+multiple-versions = "warn"
+wildcards = "deny"
+# Path dependencies between workspace crates have no version requirement by design.
+allow-wildcard-paths = true
+
+[sources]
+# Only crates.io; git or alternative registries need an explicit, reviewed exception here.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
