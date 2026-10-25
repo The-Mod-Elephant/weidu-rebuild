@@ -167,8 +167,11 @@ jobs:
           echo "${ACTIONLINT_SHA256}  ${archive}" | sha256sum --check --strict
           tar -xzf "$archive" actionlint
       - name: actionlint
-        # -format emits GitHub annotations so every finding points at its workflow line.
-        run: ./actionlint -format '{{range $err := .}}::error file={{$err.Filepath}},line={{$err.Line}},col={{$err.Column}}::{{$err.Message}}\n{{end}}'
+        env:
+          # A Go template that renders every finding as a GitHub annotation on its workflow line.
+          # actionlint itself unescapes the "\n". Kept in env so the shell never sees the `$err`.
+          ACTIONLINT_FORMAT: '{{range $err := .}}::error file={{$err.Filepath}},line={{$err.Line}},col={{$err.Column}}::{{$err.Message}}\n{{end}}'
+        run: ./actionlint -format "$ACTIONLINT_FORMAT"
       - uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
         with:
           tool: zizmor@1.31.1
