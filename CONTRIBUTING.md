@@ -63,3 +63,9 @@ breaking change.
 
 Repository admins should make `CI gate` and `pre-commit` required status checks in the `main`
 ruleset.
+
+### Dependabot
+
+Dependabot proposes weekly updates for Cargo crates, GitHub Actions and the Rust toolchain, and
+monthly updates for `flake.lock`. Low-risk updates (Actions patch/minor, Cargo patch, toolchain
+patch) get auto-merge enabled once `CI gate` is a required check; everything else needs a review.
