@@ -2,6 +2,7 @@
 
 > Why? Because we must.
 
+[![CI](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/ci.yml)
 [![lint](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/lint.yml/badge.svg)](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/lint.yml)
 [![CodeQL](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/codeql.yml)
 [![License: GPL-3.0](https://img.shields.io/github/license/The-Mod-Elephant/weidu-rebuild)](LICENSE)
