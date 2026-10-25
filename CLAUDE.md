@@ -1,0 +1,70 @@
+# Repository Instructions
+
+## Working standard
+
+- Be professional, precise, and evidence-driven. Inspect the repository before proposing or making
+  changes, and ask for clarification when product intent cannot be established from repository
+  evidence.
+- Never speculate about APIs, platform behavior, dependency versions, release state, or security
+  properties. Use authoritative project files and upstream primary documentation.
+- Preserve unrelated worktree changes. Do not rewrite, delete, or reformat files outside the
+  requested scope.
+- Add rich, detailed, and accurate inline comments across *all* source code files.
+  Do not add comments that merely restate the code.
+- Keep changes focused and reviewable. Avoid unrelated cleanup, premature abstractions, and copied
+  implementations whose licensing or provenance is unclear.
+
+## File structure
+
+- Never put multiple unrelated classes, composables, or responsibilities in one file.
+- One top-level class/object/whatever per file, named after the file.
+- Keep files under ~500 lines. If a file grows past that, split it before adding more.
+- Before writing code for a new feature, list the files you will create and what each one is responsible for.
+
+## Verification policy
+
+Verification is hybrid: the local machine runs the inner development loop, and GitHub Actions is
+the authoritative gate.
+
+- Locally, run the Rust checks (`cargo fmt`, `cargo clippy`, `cargo test`), the Python script
+  tests / validators, and the like (commands in `CONTRIBUTING.md`). Iterate there before pushing.
+  `scripts/clean_local.py` removes regenerable local build output.
+- Never commit machine-specific paths or settings.
+- Local results are evidence, not verification: local packages and tools can differ
+  from the pinned CI toolchain. Do not present a change as verified until the relevant GitHub Actions
+  jobs pass. In the pull request, record what ran locally, and list coverage that is unavailable or
+  intentionally skipped.
+- Never run release publishing locally. It should only be run via `.github/workflows/release.yml`.
+- When debugging, always test all possible edge/tricky cases.
+
+## Sources of truth
+
+- Git tags of the form `vMAJOR.MINOR.PATCH` are the only application version source; there is no
+  `VERSION` file and Cargo manifests carry no `version`. The next version is computed from the
+  Conventional Commits since the latest tag (`scripts/release.py plan`), and `CHANGELOG.md` must
+  contain the matching `## [X.Y.Z] - YYYY-MM-DD` section before `release.yml` will tag it.
+- `scripts/release_tools/commit_types.py` is the single source of the allowed commit types and
+  their version-bump effect; `.gitmessage` and `CONTRIBUTING.md` must list the same types.
+- `SECURITY.md`, `docs/architecture/THREAT_MODEL.md`, and `docs/release/READINESS.md` define the
+  security and release gates. Update them when a change alters a documented boundary.
+
+## Product and architecture invariants
+
+- Mods are untrusted input. All game-directory I/O goes through the `iemod-vfs` crate, which is
+  confined to one capability-opened game root: no absolute paths, no `..` traversal, no symlink
+  escape, and no delete API. Do not add `std::fs` calls on game data elsewhere.
+- `unsafe_code` is forbidden workspace-wide. Mod scripts must never be able to spawn processes,
+  open network connections, or touch paths outside the game root.
+- Text matching uses the linear-time `regex` crate semantics; no backtracking regex engines.
+- Binary format parsers validate every length and offset before use and return typed errors,
+  never panic, on malformed input. Cite the format specification section in comments.
+
+## Change and review conventions
+
+- Use Conventional Commits with the repository's allowed types and a subject no longer than 100
+  characters. Keep commits independently understandable.
+- Keep GitHub Actions permissions minimal and never put credentials or signing material in the repository,
+  logs, artifacts, or pull request text.
+- Update third-party notices when shipped dependency or licensing obligations change: `deny.toml`
+  holds the license allowlist and `about.toml` / `about.hbs` drive the notices bundled with each
+  release.
