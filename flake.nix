@@ -14,7 +14,6 @@
         "aarch64-darwin"
       ];
       forEachSystem = f: nixpkgs.lib.genAttrs systems (system: f system);
-      pkgsFor = nixpkgs.legacyPackages;
     in
     {
       devShells = forEachSystem (
@@ -25,11 +24,9 @@
         {
           default =
             with pkgs;
-            mkShell rec {
+            mkShell {
               nativeBuildInputs = [
-                codespell
                 direnv
-                git
                 hk
                 nil
                 nixfmt
@@ -37,6 +34,7 @@
               ];
               buildInputs = [
               ];
+              env.HK_PKL_BACKEND = "pklr";
             };
         }
       );
