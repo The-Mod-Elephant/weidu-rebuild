@@ -5,9 +5,9 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@main
       - uses: nixbuild/nix-quick-install-action@v35
-      - name: nixcache
+      - name: cache
         uses: nix-community/cache-nix-action@v7
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
@@ -15,4 +15,4 @@ jobs:
           gc-max-store-size-linux: 5G
       - name: pre-commit
         shell: 'nix develop -c bash -e {0}'
-        run: env HK_FIX=0 hk run pre-commit --all --no-fail-fast --stash none
+        run: hk run pre-commit --all -j 10

@@ -1,0 +1,35 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+Cargo.lock linguist-generated=true
+flake.lock linguist-generated=true
+*.2da -text
+*.ids -text
+*.bif binary
+*.bam binary
+*.key binary
+*.tlk binary
+*.itm binary
+*.spl binary
+*.cre binary
+*.are binary
+*.wed binary
+*.tis binary
+*.mos binary
+*.bcs binary
+*.bs binary
+*.sto binary
+*.eff binary
+*.pro binary
+*.vvc binary
+*.wmp binary
+*.chu binary
+*.dlg binary
+*.gam binary
+*.sav binary
+*.mus binary
+*.acm binary
+*.wav binary
+*.pvrz binary
+*.bmp binary
+*.png binary
