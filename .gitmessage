@@ -1,0 +1,30 @@
+
+# <type>(<optional scope>)<optional !>: <description>
+# |<----  header: at most 100 characters, imperative mood  ---->|
+#
+# [optional body: what changed and why, wrapped at 72 columns]
+#
+# [optional footer(s), e.g.]
+# BREAKING CHANGE: <what breaks and how to migrate>
+# Refs: #123
+#
+# Conventional Commits 1.0.0: https://www.conventionalcommits.org/en/v1.0.0/
+# Enable this template once per clone:  git config commit.template .gitmessage
+# Lines starting with "#" are removed by git.
+#
+# Allowed types (release bump in brackets; "!" or a BREAKING CHANGE footer
+# bumps MINOR while the version is 0.y.z and MAJOR from 1.0.0 on):
+#   feat:     A new user-facing feature [minor]
+#   fix:      A user-facing bug fix [patch]
+#   perf:     A change that improves performance [patch]
+#   revert:   Reverts a previous commit [patch]
+#   refactor: A code change that neither fixes a bug nor adds a feature [none]
+#   docs:     Documentation only changes [none]
+#   style:    Formatting changes that do not affect meaning [none]
+#   test:     Adding or correcting tests [none]
+#   build:    Build system, toolchain or dependency changes [none]
+#   ci:       CI configuration and workflow changes [none]
+#   chore:    Maintenance that does not touch shipped code [none]
+#
+# Scope: optional lowercase noun for the area touched, e.g. vfs, cli,
+# formats, release, ci, deps.

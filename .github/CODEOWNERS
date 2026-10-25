@@ -1,0 +1,16 @@
+# Code owners: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# Later matching patterns take precedence. Review by a code owner becomes mandatory only if the
+# `main` ruleset enables "Require review from Code Owners".
+
+# Default owners for everything in the repository.
+*                       @4Luke4 @dark0dave
+
+# Security-sensitive boundaries: the filesystem sandbox, CI/release automation, and the documents
+# that define the security and release gates. Listed explicitly so ownership stays obvious even if
+# the default rule above changes.
+/crates/iemod-vfs/      @4Luke4 @dark0dave
+/.github/               @4Luke4 @dark0dave
+/scripts/               @4Luke4 @dark0dave
+/SECURITY.md            @4Luke4 @dark0dave
+/docs/architecture/     @4Luke4 @dark0dave
+/docs/release/          @4Luke4 @dark0dave

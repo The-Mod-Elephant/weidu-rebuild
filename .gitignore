@@ -7,3 +7,13 @@ plan.md
 .tmp
 .direnv
 .hk
+
+# Rust build output (regenerable; removed by scripts/clean_local.py)
+/target/
+
+# Python bytecode caches produced by running the scripts and their tests
+__pycache__/
+*.py[cod]
+
+# Release staging directory produced by local dry runs of the packaging steps
+/dist/

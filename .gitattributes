@@ -1,0 +1,46 @@
+# Git attributes: https://git-scm.com/docs/gitattributes
+# Normalise every text file to LF in the repository and in working trees, on every platform, so
+# that hashes, diffs, and the byte-exact test fixtures are identical on Windows, macOS and Linux.
+* text=auto eol=lf
+
+# Windows-only scripts must keep CRLF to run correctly under cmd.exe.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Lock files are generated: collapse them in diffs and avoid merge-driver line mangling.
+Cargo.lock linguist-generated=true -diff
+flake.lock linguist-generated=true -diff
+
+# Infinity Engine game resources (see the IESDP file-format reference) must be stored byte-exact,
+# so that test fixtures and installed output match the original bytes on every platform. Text-like tables (2DA, IDS) disable normalisation but stay diffable; every other
+# resource type is treated as binary (no normalisation, no textual diff or merge).
+*.2da -text
+*.ids -text
+*.bif binary
+*.bam binary
+*.key binary
+*.tlk binary
+*.itm binary
+*.spl binary
+*.cre binary
+*.are binary
+*.wed binary
+*.tis binary
+*.mos binary
+*.bcs binary
+*.bs binary
+*.sto binary
+*.eff binary
+*.pro binary
+*.vvc binary
+*.wmp binary
+*.chu binary
+*.dlg binary
+*.gam binary
+*.sav binary
+*.mus binary
+*.acm binary
+*.wav binary
+*.pvrz binary
+*.bmp binary
+*.png binary
