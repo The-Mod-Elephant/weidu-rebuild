@@ -1,18 +1,33 @@
-name: Mark stale issues and pull requests
+name: Stale issues and pull requests
 on:
   schedule:
-    - cron: '35 20 * * *'
+    - cron: "35 20 * * *"
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: stale
+  cancel-in-progress: false
 jobs:
   stale:
+    name: Mark and close stale items
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
-      issues: write
-      pull-requests: write
+      issues: write # label, comment on and close stale issues
+      pull-requests: write # label, comment on and close stale pull requests
     steps:
-      - uses: actions/stale@v5
+      - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          stale-issue-message: 'Stale issue message'
-          stale-pr-message: 'Stale pull request message'
-          stale-issue-label: 'no-issue-activity'
-          stale-pr-label: 'no-pr-activity'
+          days-before-stale: 60
+          days-before-close: 14
+          stale-issue-label: stale
+          stale-pr-label: stale
+          exempt-issue-labels: security,pinned,help wanted,good first issue
+          exempt-pr-labels: security,pinned,dependencies
+          exempt-all-assignees: true
+          exempt-all-milestones: true
+          exempt-draft-pr: true
+          stale-issue-message: This issue has had no activity for 60 days and is now marked stale. It will be closed in 14 days unless someone comments or removes the `stale` label.
+          stale-pr-message: This pull request has had no activity for 60 days and is now marked stale. It will be closed in 14 days unless it is updated or the `stale` label is removed.
+          close-issue-message: Closed after 14 more days without activity. Comment if this should be reopened.
+          close-pr-message: Closed after 14 more days without activity. Feel free to reopen it when work resumes.

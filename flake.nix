@@ -27,6 +27,7 @@
             with pkgs;
             mkShell {
               nativeBuildInputs = [
+                actionlint
                 cargo
                 clippy
                 direnv
@@ -37,6 +38,7 @@
                 rustc
                 rustfmt
                 yamlfmt
+                zizmor
               ];
               buildInputs = [
                 openssl
