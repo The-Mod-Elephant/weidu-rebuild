@@ -1,0 +1,16 @@
+
+# <type>(<optional scope>)<optional !>: <description>
+#
+# [optional body: what changed and why, wrapped at 72 columns]
+#
+# [optional footers, e.g.]
+# BREAKING CHANGE: <what breaks and how to migrate>
+# Refs: #123
+#
+# https://www.conventionalcommits.org/en/v1.0.0/
+# Enable once per clone: git config commit.template .gitmessage
+#
+# Types (checked by `hk util check-conventional-commit`):
+#   feat, fix, perf, revert, refactor, docs, style, test, build, ci, chore
+# Header at most 100 characters. "!" or a BREAKING CHANGE footer marks a
+# breaking change.

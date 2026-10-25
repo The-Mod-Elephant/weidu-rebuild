@@ -8,7 +8,5 @@ plan.md
 .direnv
 .hk
 
-
-# Added by cargo
-
+# Rust build output
 /target
