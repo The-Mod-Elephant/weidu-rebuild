@@ -7,7 +7,6 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 
 use std::fs;
-use std::io::ErrorKind;
 use std::path::Path;
 
 use iemod_vfs::{GameRoot, RelPath, VfsError};
@@ -131,6 +130,7 @@ fn write_through_a_file_fails_without_side_effects() {
 #[cfg(unix)]
 #[test]
 fn symlinks_cannot_escape_the_root() {
+    use std::io::ErrorKind;
     use std::os::unix::fs::symlink;
 
     let outside = TempDir::new().unwrap();
