@@ -2,6 +2,7 @@
 
 > Why? Because we must.
 
+[![CI](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/ci.yml)
 [![lint](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/lint.yml/badge.svg)](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/lint.yml)
 [![CodeQL](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/codeql.yml)
 [![License: GPL-3.0](https://img.shields.io/github/license/The-Mod-Elephant/weidu-rebuild)](LICENSE)
@@ -21,6 +22,26 @@ A new, safe and fast toolchain for installing and authoring mods for Infinity En
 - **Predictable.** One coherent command-line interface with identical behaviour on Windows, macOS
   and Linux.
 - **Easy to build.** A standard Cargo workspace and a Nix development shell.
+
+## Building and usage
+
+```sh
+nix develop    # optional: provides the Rust toolchain and the other tools
+cargo build --release --locked
+./target/release/iemod doctor --game "/path/to/game"
+```
+
+`iemod doctor` checks that a directory is an Infinity Engine game installation. Commands exit
+with status 0 on success and non-zero on failure, printing the error.
+
+## Repository layout
+
+| Path | Contents |
+| --- | --- |
+| `crates/iemod-cli` | The `iemod` executable |
+| `crates/iemod-vfs` | Sandboxed, case-insensitive game-directory access |
+| `crates/iemod-formats` | Infinity Engine file formats ([IESDP](https://gibberlings3.github.io/iesdp/)) |
+| `docs/` | Design decisions, threat model and release gates |
 
 ## Contributing
 

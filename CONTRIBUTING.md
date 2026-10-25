@@ -17,8 +17,8 @@ git config commit.template .gitmessage
 Run before pushing; CI runs the same hooks:
 
 ```sh
-hk check --all
-cargo test
+hk check --all            # formatting, clippy, cargo-deny, workflow linters, ...
+cargo test --workspace --locked
 ```
 
 Local results are evidence, not verification: GitHub Actions is the authoritative gate. In the
@@ -56,7 +56,10 @@ breaking change.
 
 | Workflow | Check | Purpose |
 | --- | --- | --- |
-| `lint.yml` | `pre-commit` | Every hk hook on all files, then the pull request title; on `main` it also refreshes the Nix cache |
+| `ci.yml` | `CI gate` | Aggregates the jobs below; skipped jobs count as passed |
+| `ci.yml` | `Rust tests (<os>)` | Tests and docs on Linux and Windows, plus macOS on `main`; skipped when no Rust file changed |
+| `lint.yml` | `pre-commit` | Every hk hook on all files (clippy and cargo-deny included; also weekly), then the pull request title; on `main` it also refreshes the Nix cache |
 | `codeql.yml` | `Analyze (...)` | CodeQL code scanning |
 
-Repository admins should make `pre-commit` a required status check in the `main` ruleset.
+Repository admins should make `CI gate` and `pre-commit` required status checks in the `main`
+ruleset.
