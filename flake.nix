@@ -34,7 +34,6 @@
               ];
               buildInputs = [
               ];
-              env.HK_PKL_BACKEND = "pklr";
             };
         }
       );
