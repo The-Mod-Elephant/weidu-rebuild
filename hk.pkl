@@ -2,6 +2,9 @@ amends "package://github.com/jdx/hk/releases/download/v2.8.1/hk@2.8.1#/Config.pk
 import "package://github.com/jdx/hk/releases/download/v2.8.1/hk@2.8.1#/Builtins.pkl"
 
 local builtins = new Mapping<String, Step> {
+  ["cargo-check"] = Builtins.cargo_check
+  ["cargo-clippy"] = Builtins.cargo_clippy
+  ["cargo-fmt"] = Builtins.cargo_fmt
   ["check-case-conflict"] = Builtins.check_case_conflict
   ["check-merge-conflict"] = Builtins.check_merge_conflict
   ["end-of-file-fixer"] = Builtins.newlines
@@ -18,17 +21,17 @@ local commit_msg_hooks = new Mapping<String, Step> {
 }
 
 hooks {
+  ["commit-msg"] {
+    steps {
+      ...commit_msg_hooks
+    }
+  }
   ["pre-commit"] {
     fix = true
     stash = "git"
     steps {
       ...builtins
       ...local_hooks
-    }
-  }
-  ["commit-msg"] {
-    steps {
-      ...commit_msg_hooks
     }
   }
 }
