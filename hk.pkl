@@ -5,12 +5,16 @@ local builtins = new Mapping<String, Step> {
   ["check-case-conflict"] = Builtins.check_case_conflict
   ["check-merge-conflict"] = Builtins.check_merge_conflict
   ["end-of-file-fixer"] = Builtins.newlines
+  ["nix-fmt"] = Builtins.nix_fmt
   ["trailing-whitespace"] = Builtins.trailing_whitespace
   ["yamlfmt"] = Builtins.yamlfmt
-  ["nix-fmt"] = Builtins.nix_fmt
 }
 
 local local_hooks = new Mapping<String, Step> {
+}
+
+local commit_msg_hooks = new Mapping<String, Step> {
+  ["conventional-commit"] = Builtins.check_conventional_commit
 }
 
 hooks {
@@ -20,6 +24,11 @@ hooks {
     steps {
       ...builtins
       ...local_hooks
+    }
+  }
+  ["commit-msg"] {
+    steps {
+      ...commit_msg_hooks
     }
   }
 }
