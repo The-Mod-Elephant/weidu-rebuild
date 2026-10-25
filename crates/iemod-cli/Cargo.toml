@@ -1,0 +1,24 @@
+[package]
+name = "iemod-cli"
+description = "Command-line interface of the iemod toolchain."
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+# The user-facing executable name (placeholder project name, see README.md).
+name = "iemod"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.6.7", features = ["derive"] }
+iemod-formats = { path = "../iemod-formats" }
+iemod-vfs = { path = "../iemod-vfs" }
+thiserror = "2.0.21"
+
+[dev-dependencies]
+tempfile = "3.27.0"
