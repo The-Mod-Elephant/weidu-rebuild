@@ -9,8 +9,8 @@ checked by the maintainer who starts the workflow.
 | # | Gate | How it is enforced |
 | --- | --- | --- |
 | R1 | The release is made from `main`. | *Automated*: the `plan` job only runs for `refs/heads/main`. |
-| R2 | The version equals the one computed from the Conventional Commits since the last tag (or is an explicit `1.0.0` graduation). | *Automated*: `scripts/release.py verify`. |
-| R3 | `CHANGELOG.md` has a valid `## [X.Y.Z] - YYYY-MM-DD` section for that version, `[Unreleased]` is empty, and the links are canonical. | *Automated*: `scripts/release.py verify`. |
+| R2 | The version is the one git-cliff computes from the Conventional Commits since the last tag (or an explicit `major` bump to leave 0.x). | *Automated*: `git cliff --bumped-version` in the `plan` job. |
+| R3 | At least one commit since the last tag requires a release. | *Automated*: the `plan` job refuses when the computed tag already exists. |
 | R4 | The tag `vX.Y.Z` does not exist yet. | *Automated*: checked when planning and again just before publishing. |
 | R5 | CI (`CI gate`, `Conventional commits`, CodeQL) is green on the release commit. | Maintainer: check the commit's status on `main` before starting. |
 | R6 | Every target builds with `--locked` from a clean state and `iemod --version` prints the release version. | *Automated*: `build` matrix smoke test. |
