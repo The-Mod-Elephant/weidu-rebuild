@@ -38,7 +38,6 @@ jobs:
     outputs:
       version: ${{ steps.verify.outputs.version }}
       tag: ${{ steps.verify.outputs.tag }}
-      sha: ${{ steps.verify.outputs.sha }}
       epoch: ${{ steps.epoch.outputs.epoch }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -53,10 +52,18 @@ jobs:
         name: Compute the version and verify CHANGELOG.md
         run: python scripts/release.py verify
       - id: epoch
-        name: Record the commit time for reproducible archives
+        name: Confirm the verified commit and record its time
         env:
-          SHA: ${{ steps.verify.outputs.sha }}
-        run: echo "epoch=$(git log -1 --format=%ct "$SHA")" >> "$GITHUB_OUTPUT"
+          VERIFIED_SHA: ${{ steps.verify.outputs.sha }}
+        run: |
+          # Every later job checks out github.sha directly (never a job output, which code
+          # scanning rightly treats as an untrusted ref), so the verified commit must be it.
+          if [ "$VERIFIED_SHA" != "$GITHUB_SHA" ]; then
+            echo "::error title=Commit mismatch::verified ${VERIFIED_SHA} but the run is for ${GITHUB_SHA}"
+            exit 1
+          fi
+          # Commit time drives SOURCE_DATE_EPOCH, making the archives reproducible.
+          echo "epoch=$(git log -1 --format=%ct "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
       - name: Extract release notes
         env:
           VERSION: ${{ steps.verify.outputs.version }}
@@ -77,7 +84,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.plan.outputs.sha }}
           persist-credentials: false
       - uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
         with:
@@ -115,7 +121,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.plan.outputs.sha }}
           persist-credentials: false
       - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
         with:
@@ -172,7 +177,6 @@ jobs:
       attestations: write # store the signed provenance attestations
     env:
       TAG: ${{ needs.plan.outputs.tag }}
-      SHA: ${{ needs.plan.outputs.sha }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -199,4 +203,4 @@ jobs:
           fi
       - name: Create the tag and GitHub Release
         run: >-
-          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$SHA" --title "$TAG" --notes-file release-notes.md
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --notes-file release-notes.md
