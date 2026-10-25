@@ -29,9 +29,11 @@
               nativeBuildInputs = [
                 actionlint
                 cargo
+                cargo-about
                 cargo-deny
                 clippy
                 direnv
+                git-cliff
                 hk
                 nil
                 nixfmt

@@ -5,8 +5,10 @@
 [![CI](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/ci.yml)
 [![lint](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/lint.yml/badge.svg)](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/lint.yml)
 [![CodeQL](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/The-Mod-Elephant/weidu-rebuild/actions/workflows/codeql.yml)
+[![Latest release](https://img.shields.io/github/v/release/The-Mod-Elephant/weidu-rebuild?sort=semver&display_name=tag)](https://github.com/The-Mod-Elephant/weidu-rebuild/releases)
 [![License: GPL-3.0](https://img.shields.io/github/license/The-Mod-Elephant/weidu-rebuild)](LICENSE)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org/en/v1.0.0/)
+[![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog%201.1.0-%23E05735)](https://github.com/The-Mod-Elephant/weidu-rebuild/releases)
 
 A new, safe and fast toolchain for installing and authoring mods for Infinity Engine games.
 
@@ -22,6 +24,16 @@ A new, safe and fast toolchain for installing and authoring mods for Infinity En
 - **Predictable.** One coherent command-line interface with identical behaviour on Windows, macOS
   and Linux.
 - **Easy to build.** A standard Cargo workspace and a Nix development shell.
+
+## Installation
+
+Each [GitHub Release](https://github.com/The-Mod-Elephant/weidu-rebuild/releases) has archives
+for Linux, macOS and Windows (each including `CHANGELOG.md`), a `SHA256SUMS` file and signed
+build-provenance attestations:
+
+```sh
+gh attestation verify iemod-vX.Y.Z-<target>.tar.gz --repo The-Mod-Elephant/weidu-rebuild
+```
 
 ## Building and usage
 
