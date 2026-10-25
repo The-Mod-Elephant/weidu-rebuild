@@ -1,0 +1,13 @@
+[package]
+name = "iemod-formats"
+description = "Parsers for Infinity Engine file formats."
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror = "2.0.21"

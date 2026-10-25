@@ -89,6 +89,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "iemod-formats"
+version = "0.0.0"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "iemod-vfs"
 version = "0.0.0"
 dependencies = [
