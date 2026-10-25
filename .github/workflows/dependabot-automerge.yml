@@ -1,0 +1,62 @@
+# Enables auto-merge for low-risk Dependabot updates; GitHub merges only after required checks pass.
+# Low risk: github-actions patch/minor, cargo patch (a 0.y minor bump is breaking in Cargo),
+# rust-toolchain patch. Everything else waits for a human.
+name: Dependabot auto-merge
+# Follows GitHub's "Automating Dependabot with GitHub Actions" example (`pull_request` with write
+# permissions); `pull_request_target` is avoided on purpose.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+permissions: {}
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  automerge:
+    name: Enable auto-merge for low-risk updates
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # required by `gh pr merge --auto`
+      pull-requests: write # enable auto-merge on the pull request
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ github.token }}
+      - id: risk
+        name: Classify risk
+        env:
+          ECOSYSTEM: ${{ steps.meta.outputs.package-ecosystem }}
+          UPDATE_TYPE: ${{ steps.meta.outputs.update-type }}
+        run: |
+          # The ecosystem comes from Dependabot's branch name, which uses underscores.
+          case "$ECOSYSTEM:$UPDATE_TYPE" in
+            github_actions:version-update:semver-patch | github_actions:version-update:semver-minor | \
+            cargo:version-update:semver-patch | \
+            rust_toolchain:version-update:semver-patch | rust-toolchain:version-update:semver-patch)
+              echo "low_risk=true" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "::notice title=Manual review required::${ECOSYSTEM} ${UPDATE_TYPE:-update} is outside the auto-merge policy"
+              echo "low_risk=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+      # Without a required check, auto-merge would merge immediately.
+      - name: Verify that CI gate is a required check
+        if: steps.risk.outputs.low_risk == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          required=$(gh api "repos/${GITHUB_REPOSITORY}/rules/branches/${BASE_REF}" \
+            --jq '[.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context]')
+          if ! jq --exit-status 'index("CI gate") != null' <<<"$required" >/dev/null; then
+            echo "::error title=Auto-merge refused::'CI gate' is not a required check on ${BASE_REF} (required: ${required}); an admin must add it to the ruleset"
+            exit 1
+          fi
+      - name: Enable auto-merge (squash)
+        if: steps.risk.outputs.low_risk == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"
