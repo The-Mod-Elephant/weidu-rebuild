@@ -1,0 +1,6 @@
+# Pinned Rust toolchain, read by rustup locally and by actions-rust-lang/setup-rust-toolchain in
+# CI so both use the same compiler. Dependabot's `rust-toolchain` ecosystem proposes updates.
+[toolchain]
+channel = "1.99.1"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

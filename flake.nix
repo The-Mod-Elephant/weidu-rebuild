@@ -20,20 +20,29 @@
         system:
         let
           pkgs = import nixpkgs { inherit system; };
+          overrides = (builtins.fromTOML (builtins.readFile ./rust-toolchain.toml));
         in
         {
           default =
             with pkgs;
             mkShell {
               nativeBuildInputs = [
+                cargo
+                clippy
                 direnv
                 hk
                 nil
                 nixfmt
+                rust-analyzer
+                rustc
+                rustfmt
                 yamlfmt
               ];
               buildInputs = [
+                openssl
               ];
+              env.RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
+              env.RUSTC_VERSION = overrides.toolchain.channel;
             };
         }
       );
