@@ -1,8 +1,9 @@
 # Local planning notes
 plan.md
 
-############################
-
+# Local files
 .envrc
 .swp
 .tmp
+.direnv
+.hk
