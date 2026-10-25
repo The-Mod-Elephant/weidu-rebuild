@@ -1,0 +1,54 @@
+# Dependabot version updates: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+# Low-risk updates are merged automatically once CI passes; see
+# .github/workflows/dependabot-automerge.yml for the exact policy.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    # Wait before proposing a fresh release, which gives the ecosystem time to catch a
+    # compromised or broken publish before it reaches this repository.
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      # One pull request for all compatible updates keeps CI usage and review effort low;
+      # major updates still arrive individually.
+      cargo-minor-and-patch:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions-minor-and-patch:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+  # Keeps the pinned compiler in rust-toolchain.toml current.
+  - package-ecosystem: rust-toolchain
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: build
+      include: scope
+  # Keeps flake.lock (the Nix development shell) current.
+  - package-ecosystem: nix
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: build
+      include: scope

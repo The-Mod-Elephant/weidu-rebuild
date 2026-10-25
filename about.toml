@@ -1,0 +1,22 @@
+# cargo-about configuration: https://embarkstudios.github.io/cargo-about/
+# release.yml runs `cargo about generate --locked about.hbs` to produce THIRD_PARTY_NOTICES.md,
+# which ships inside every release archive. Keep `accepted` identical to `[licenses] allow` in
+# deny.toml (the GPLv3-compatibility review lives there) and `targets` identical to
+# `[graph] targets`.
+accepted = [
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "MIT",
+  "Unicode-3.0",
+]
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+]
+# Dev-dependencies (test helpers) are never shipped in release binaries.
+ignore-dev-dependencies = true
+# Workspace crates are covered by the repository LICENSE, not by third-party notices.
+private = { ignore = true }

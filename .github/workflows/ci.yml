@@ -1,0 +1,204 @@
+# Main continuous-integration workflow. Design notes (see also .github/CLAUDE.md):
+# * A `changes` job classifies the diff and the other jobs skip themselves with `if:` when their
+#   area is untouched. Skipped jobs report success, so required checks never hang, and the final
+#   `CI gate` job is the single status check the `main` ruleset needs to require.
+# * Every action is pinned to a full commit SHA (the trailing comment names the release) and
+#   Dependabot keeps the pins current.
+# * The token has no permissions by default; each job grants itself only what it needs.
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly, so newly published RustSec advisories surface even without code changes.
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  # One run per pull request or branch; superseded pull-request runs are cancelled to save
+  # minutes, while runs on main always complete so every commit there has a full result.
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  CARGO_TERM_COLOR: always
+  # Lowest Python version the scripts support (CONTRIBUTING.md); newer ones are exercised locally.
+  PYTHON_VERSION: "3.11"
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      rust: ${{ steps.detect.outputs.rust }}
+      python: ${{ steps.detect.outputs.python }}
+      workflows: ${{ steps.detect.outputs.workflows }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: detect
+        name: Classify changed files
+        env:
+          # Pull requests diff against their base; pushes against the previous tip. Scheduled and
+          # manual runs have neither, which makes the script run every group.
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = "schedule" ] || [ "$EVENT" = "workflow_dispatch" ]; then BASE=""; fi
+          python3 scripts/detect_changes.py --base "$BASE" --head "$GITHUB_SHA"
+  rust-fmt:
+    name: Rust formatting
+    needs: changes
+    if: needs.changes.outputs.rust == 'true' && github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          # Formatting compiles nothing, so a cache would only cost time.
+          cache: false
+      - name: cargo fmt --check
+        # The toolchain action's problem matcher turns rustfmt diffs into file annotations.
+        run: cargo fmt --all --check
+  rust:
+    name: Rust tests (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.rust == 'true' && github.event_name != 'schedule'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows runs on every pull request because path handling, the core of the sandbox,
+        # differs most there. macOS only runs after merge to keep pull-request runs cheap.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest","windows-latest"]' || '["ubuntu-latest","windows-latest","macos-latest"]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          # Only main writes the cache; pull requests restore it. This keeps one warm cache per
+          # OS instead of a quickly evicted copy per pull request.
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: cargo clippy (warnings are errors)
+        if: runner.os == 'Linux'
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: cargo test
+        run: cargo test --workspace --locked
+      - name: cargo doc (warnings are errors)
+        if: runner.os == 'Linux'
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --workspace --no-deps --document-private-items --locked
+  cargo-deny:
+    name: Dependency policy (cargo-deny)
+    needs: changes
+    if: needs.changes.outputs.rust == 'true' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
+        with:
+          # Prebuilt, checksum-verified binary at an exact version; Dependabot cannot bump this
+          # string, so update it together with deny.toml when adopting a new cargo-deny.
+          tool: cargo-deny@0.20.2
+      - name: cargo deny check (advisories, bans, licenses, sources)
+        run: cargo deny --locked check
+  python:
+    name: Python scripts and changelog
+    needs: changes
+    if: needs.changes.outputs.python == 'true' && github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Tags are needed to check that CHANGELOG.md sections and release tags correspond.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Unit tests
+        run: python -m unittest discover --start-directory scripts/tests --top-level-directory scripts --verbose
+      - name: Validate CHANGELOG.md
+        run: python scripts/changelog.py validate
+  workflow-lint:
+    name: Workflow lint (actionlint, zizmor)
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true' && github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      # Bump both values together; the digest is the one published in the release's
+      # actionlint_<version>_checksums.txt, pinned here so a replaced release asset is rejected.
+      ACTIONLINT_VERSION: "1.7.12"
+      ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install actionlint ${{ env.ACTIONLINT_VERSION }} (checksum pinned)
+        run: |
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl --fail --silent --show-error --location --remote-name \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+          echo "${ACTIONLINT_SHA256}  ${archive}" | sha256sum --check --strict
+          tar -xzf "$archive" actionlint
+      - name: actionlint
+        # -format emits GitHub annotations so every finding points at its workflow line.
+        run: ./actionlint -format '{{range $err := .}}::error file={{$err.Filepath}},line={{$err.Line}},col={{$err.Column}}::{{$err.Message}}{{"\n"}}{{end}}'
+      - uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
+        with:
+          tool: zizmor@1.31.1
+      - name: zizmor (workflow security audit)
+        env:
+          # Enables zizmor's online audits (e.g. known-vulnerable action versions); read-only.
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor --format=github .github
+  gate:
+    name: CI gate
+    if: always()
+    needs: [changes, rust-fmt, rust, cargo-deny, python, workflow-lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Evaluate job results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        shell: python
+        run: |
+          # Succeeds only if every needed job succeeded or was skipped on purpose, and prints a
+          # summary table naming the failing jobs so nobody has to dig through the run graph.
+          import json, os
+          needs = json.loads(os.environ["NEEDS"])
+          bad = {name: job["result"] for name, job in needs.items()
+                 if job["result"] not in ("success", "skipped")}
+          rows = "\n".join(f"| {name} | {job['result']} |" for name, job in needs.items())
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write(f"### CI gate\n\n| Job | Result |\n| --- | --- |\n{rows}\n")
+          for name, result in bad.items():
+              print(f"::error title=CI gate::job '{name}' finished with result '{result}'")
+          raise SystemExit(1 if bad else 0)

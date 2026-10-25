@@ -1,0 +1,38 @@
+# Enforces Conventional Commits 1.0.0 on every commit of a pull request and on its title (the
+# title becomes the commit header when a pull request is squash-merged). Rules and allowed types:
+# scripts/release_tools/conventional.py and commit_types.py; contributor guide: CONTRIBUTING.md.
+name: Conventional commits
+on:
+  pull_request:
+    # `edited` re-runs the check when only the title changes.
+    types: [opened, edited, reopened, synchronize]
+permissions: {}
+concurrency:
+  group: commits-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  lint:
+    name: Conventional commits
+    # Dependabot writes its own commit messages and is exempt by policy. A skipped job reports
+    # success, so this check can be required by the ruleset without blocking Dependabot.
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Check out the pull request head itself (not the synthetic merge commit) with full
+          # history, so base..head lists exactly the commits the contributor wrote.
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check commit messages and pull request title
+        env:
+          # Untrusted values are passed through the environment, never interpolated into the
+          # script, which prevents shell injection through a crafted title.
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: python3 scripts/check_commits.py --base "$BASE_SHA" --head "$HEAD_SHA" --title "$PR_TITLE"

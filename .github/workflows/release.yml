@@ -1,0 +1,202 @@
+# Release workflow: the ONLY place releases are published (CLAUDE.md, "Verification policy").
+#
+# Run it manually from the Actions tab on `main`. It
+#   1. computes the next SemVer version from the Conventional Commits since the latest `v*` tag
+#      and refuses to continue unless CHANGELOG.md already contains the matching prepared
+#      section (scripts/release.py verify);
+#   2. builds and smoke-tests the binary natively for every supported platform, with the version
+#      embedded through IEMOD_RELEASE_VERSION;
+#   3. packages deterministic archives with LICENSE, README, CHANGELOG and third-party notices;
+#   4. unless `dry_run` is set, creates the tag and GitHub Release at exactly the verified commit,
+#      with SHA256SUMS and signed build-provenance attestations, in the protected `release`
+#      environment.
+# How to prepare a release is described in CONTRIBUTING.md#releasing.
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build and verify everything, but do not create the tag or the release
+        type: boolean
+        default: true
+permissions: {}
+concurrency:
+  # Never run two releases at once, and never cancel one halfway through publishing.
+  group: release
+  cancel-in-progress: false
+env:
+  CARGO_TERM_COLOR: always
+  PYTHON_VERSION: "3.11"
+jobs:
+  plan:
+    name: Plan and verify the release
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.verify.outputs.version }}
+      tag: ${{ steps.verify.outputs.tag }}
+      sha: ${{ steps.verify.outputs.sha }}
+      epoch: ${{ steps.epoch.outputs.epoch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history and all tags: the version is computed from them.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - id: verify
+        name: Compute the version and verify CHANGELOG.md
+        run: python scripts/release.py verify
+      - id: epoch
+        name: Record the commit time for reproducible archives
+        env:
+          SHA: ${{ steps.verify.outputs.sha }}
+        run: echo "epoch=$(git log -1 --format=%ct "$SHA")" >> "$GITHUB_OUTPUT"
+      - name: Extract release notes
+        env:
+          VERSION: ${{ steps.verify.outputs.version }}
+        run: python scripts/release.py notes --version "$VERSION" --output release-notes.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-notes
+          path: release-notes.md
+          if-no-files-found: error
+          retention-days: 7
+  notices:
+    name: Third-party notices
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+      - uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
+        with:
+          tool: cargo-about@0.9.2
+      - name: Generate THIRD_PARTY_NOTICES.md
+        # Fails if any dependency uses a license missing from about.toml's `accepted` list.
+        run: cargo about generate --locked about.hbs --output-file THIRD_PARTY_NOTICES.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: third-party-notices
+          path: THIRD_PARTY_NOTICES.md
+          if-no-files-found: error
+          retention-days: 7
+  build:
+    name: Build ${{ matrix.target }}
+    needs: [plan, notices]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        # Every target is built natively on a matching GitHub-hosted runner, so each binary can
+        # also be executed as a smoke test before it is published.
+        include:
+          - {target: x86_64-unknown-linux-gnu, os: ubuntu-latest}
+          - {target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm}
+          - {target: x86_64-pc-windows-msvc, os: windows-latest}
+          - {target: aarch64-apple-darwin, os: macos-latest}
+          - {target: x86_64-apple-darwin, os: macos-15-intel}
+    env:
+      TARGET: ${{ matrix.target }}
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          target: ${{ matrix.target }}
+          # Release artifacts are always built from scratch: a restored cache could carry
+          # outputs from other, less trusted runs (cache poisoning).
+          cache: false
+      - name: cargo build --release
+        shell: bash
+        env:
+          IEMOD_RELEASE_VERSION: ${{ needs.plan.outputs.version }}
+        run: cargo build --release --locked --package iemod-cli --target "$TARGET"
+      - name: Smoke test the binary
+        shell: bash
+        run: |
+          exe="target/$TARGET/release/iemod"
+          if [ -f "$exe.exe" ]; then exe="$exe.exe"; fi
+          actual="$("$exe" --version)"
+          if [ "$actual" != "iemod $VERSION" ]; then
+            echo "::error title=Smoke test failed::'$exe --version' printed '$actual', expected 'iemod $VERSION'"
+            exit 1
+          fi
+          echo "BINARY=$exe" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: third-party-notices
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Package
+        shell: bash
+        env:
+          SOURCE_DATE_EPOCH: ${{ needs.plan.outputs.epoch }}
+        run: >-
+          python scripts/package_release.py --binary "$BINARY" --target "$TARGET" --version "$VERSION" --notices THIRD_PARTY_NOTICES.md --out-dir dist
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+  publish:
+    name: Publish ${{ needs.plan.outputs.tag }}
+    needs: [plan, build]
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Repository admins can require reviewers for this environment, turning publication into an
+    # explicit approval step (docs/release/READINESS.md).
+    environment: release
+    permissions:
+      contents: write # create the tag and the GitHub Release
+      id-token: write # obtain the OIDC token that Sigstore exchanges for a signing certificate
+      attestations: write # store the signed provenance attestations
+    env:
+      TAG: ${{ needs.plan.outputs.tag }}
+      SHA: ${{ needs.plan.outputs.sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-notes
+      - name: Write SHA256SUMS
+        working-directory: dist
+        run: sha256sum -- * > SHA256SUMS && cat SHA256SUMS
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/*
+      - name: Refuse to reuse an existing tag
+        run: |
+          # The tag was absent when `plan` ran; re-check in case it was created meanwhile, since
+          # `gh release create` would otherwise silently attach to the existing tag.
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" >/dev/null 2>&1; then
+            echo "::error title=Tag already exists::${TAG} was created after planning; nothing was published"
+            exit 1
+          fi
+      - name: Create the tag and GitHub Release
+        run: >-
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$SHA" --title "$TAG" --notes-file release-notes.md

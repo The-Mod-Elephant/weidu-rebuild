@@ -1,0 +1,7 @@
+# Template chooser configuration: https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#configuring-the-template-chooser
+# Blank issues are disabled so every report carries the information needed to act on it.
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/The-Mod-Elephant/weidu-rebuild/security/policy
+    about: Please report vulnerabilities privately as described in the security policy, never in a public issue.

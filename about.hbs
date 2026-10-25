@@ -1,0 +1,29 @@
+{{!--
+  Handlebars template rendered by cargo-about (see about.toml) into THIRD_PARTY_NOTICES.md.
+  Triple braces ({{{ }}}) emit license texts verbatim; double braces would HTML-escape them.
+--}}
+# Third-party notices
+
+This program includes the following third-party software, distributed under the licenses
+reproduced below.
+
+## Overview
+
+{{#each overview}}
+- {{{name}}}: {{count}} crate(s)
+{{/each}}
+
+{{#each licenses}}
+## {{{name}}}
+
+Used by:
+
+{{#each used_by}}
+- {{{crate.name}}} {{{crate.version}}}
+{{/each}}
+
+```text
+{{{text}}}
+```
+
+{{/each}}

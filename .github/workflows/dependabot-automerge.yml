@@ -1,0 +1,96 @@
+# Enables auto-merge on low-risk Dependabot pull requests. GitHub then merges them only after
+# every required status check has passed, so this workflow never merges anything itself.
+#
+# Low risk means:
+#   * github-actions: patch and minor updates (actions are pinned by SHA and run sandboxed in CI);
+#   * cargo: patch updates only, because Cargo treats a 0.y minor bump as breaking;
+#   * rust-toolchain: patch releases of the pinned compiler.
+# Everything else (major updates, cargo minor updates, Nix lock updates) waits for a human.
+#
+# If the job ever fails with "Resource not accessible by integration", the token granted to
+# Dependabot-triggered runs is read-only on this repository; see CONTRIBUTING.md#dependabot.
+#
+# Safety interlock: before enabling auto-merge the workflow checks that the base branch's rules
+# require the `CI gate` status check. Without that rule auto-merge would merge immediately, so
+# the job fails with an explanation instead.
+#
+# Note: GitHub does not start new workflow runs for events caused by the workflow token (a
+# documented safeguard against recursion). If the eventual merge is attributed to that token,
+# main's push-only jobs, such as macOS tests, do not run for it; they run again with the next
+# merge made by a person.
+name: Dependabot auto-merge
+# Trigger and permissions follow GitHub's own example in "Automating Dependabot with GitHub
+# Actions" > "Enabling automerge on a pull request" (`on: pull_request` plus `contents: write`
+# and `pull-requests: write`). `pull_request_target` is deliberately avoided: it runs with a
+# write token in the base-branch context and is the trigger zizmor flags as dangerous.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+permissions: {}
+concurrency:
+  # A newer push to the same Dependabot branch supersedes the previous evaluation.
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  automerge:
+    name: Enable auto-merge for low-risk updates
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # required by `gh pr merge --auto` to schedule the merge
+      pull-requests: write # required to enable auto-merge on the pull request
+    steps:
+      - name: Read Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ github.token }}
+      - name: Classify risk
+        id: risk
+        env:
+          ECOSYSTEM: ${{ steps.meta.outputs.package-ecosystem }}
+          UPDATE_TYPE: ${{ steps.meta.outputs.update-type }}
+          DEPENDENCIES: ${{ steps.meta.outputs.dependency-names }}
+        run: |
+          # fetch-metadata takes the ecosystem from Dependabot's branch name
+          # ("dependabot/<ecosystem>/..."), which uses underscores (e.g. github_actions). The
+          # toolchain's branch segment is not documented, so both spellings are accepted; any
+          # other unrecognised value falls through to manual review.
+          case "$ECOSYSTEM:$UPDATE_TYPE" in
+            github_actions:version-update:semver-patch|github_actions:version-update:semver-minor|\
+            cargo:version-update:semver-patch|\
+            rust_toolchain:version-update:semver-patch|rust-toolchain:version-update:semver-patch)
+              low_risk=true ;;
+            *)
+              low_risk=false ;;
+          esac
+          echo "low_risk=$low_risk" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Dependabot risk classification"
+            echo ""
+            echo "| Ecosystem | Update type | Dependencies | Auto-merge |"
+            echo "| --- | --- | --- | --- |"
+            echo "| ${ECOSYSTEM} | ${UPDATE_TYPE:-unknown} | ${DEPENDENCIES} | ${low_risk} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$low_risk" != true ]; then
+            echo "::notice title=Manual review required::${ECOSYSTEM} ${UPDATE_TYPE:-update} is outside the auto-merge policy"
+          fi
+      - name: Verify that CI gate is a required check
+        if: steps.risk.outputs.low_risk == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          required=$(gh api "repos/${GITHUB_REPOSITORY}/rules/branches/${BASE_REF}" \
+            --jq '[.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context]')
+          if ! jq --exit-status 'index("CI gate") != null' <<<"$required" >/dev/null; then
+            echo "::error title=Auto-merge refused::The rules for '${BASE_REF}' do not require the 'CI gate' status check (required: ${required}). Enabling auto-merge would merge without waiting for CI. A repository admin must add 'CI gate' to the branch ruleset (see CONTRIBUTING.md#continuous-integration)."
+            exit 1
+          fi
+      - name: Enable auto-merge (squash)
+        if: steps.risk.outputs.low_risk == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"
