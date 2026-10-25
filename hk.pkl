@@ -8,9 +8,20 @@ local builtins = new Mapping<String, Step> {
   ["trailing-whitespace"] = Builtins.trailing_whitespace
   ["yamlfmt"] = Builtins.yamlfmt
   ["nix-fmt"] = Builtins.nix_fmt
+  ["cargo-fmt"] = Builtins.cargo_fmt
+  ["actionlint"] = Builtins.actionlint
 }
 
 local local_hooks = new Mapping<String, Step> {
+}
+
+// Same rules as the "Conventional commits" CI job (scripts/release_tools/conventional.py), so a
+// bad message is caught before it is pushed. Clippy is left to CI because `--fix` on every
+// commit is slow.
+local commit_msg_hooks = new Mapping<String, Step> {
+  ["conventional-commit"] {
+    check = "python3 scripts/check_commits.py --message-file {{commit_msg_file}}"
+  }
 }
 
 hooks {
@@ -20,6 +31,11 @@ hooks {
     steps {
       ...builtins
       ...local_hooks
+    }
+  }
+  ["commit-msg"] {
+    steps {
+      ...commit_msg_hooks
     }
   }
 }
