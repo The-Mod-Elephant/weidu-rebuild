@@ -7,9 +7,10 @@
 *.bat text eol=crlf
 *.cmd text eol=crlf
 
-# Lock files are generated: collapse them in diffs and avoid merge-driver line mangling.
-Cargo.lock linguist-generated=true -diff
-flake.lock linguist-generated=true -diff
+# Lock files are generated: GitHub collapses them in pull request diffs, but they stay fully
+# diffable because dependency changes must remain reviewable (supply-chain audit).
+Cargo.lock linguist-generated=true
+flake.lock linguist-generated=true
 
 # Infinity Engine game resources (see the IESDP file-format reference) must be stored byte-exact,
 # so that test fixtures and installed output match the original bytes on every platform. Text-like tables (2DA, IDS) disable normalisation but stay diffable; every other
