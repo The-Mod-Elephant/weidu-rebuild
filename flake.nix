@@ -29,6 +29,7 @@
               nativeBuildInputs = [
                 actionlint
                 cargo
+                cargo-deny
                 clippy
                 direnv
                 hk

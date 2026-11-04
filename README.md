@@ -22,6 +22,24 @@ A new, safe and fast toolchain for installing and authoring mods for Infinity En
   and Linux.
 - **Easy to build.** A standard Cargo workspace and a Nix development shell.
 
+## Building and usage
+
+```sh
+nix develop    # optional: provides the Rust toolchain and the other tools
+cargo build --release --locked
+./target/release/iemod --help
+```
+
+The command-line interface is a scaffold: it has `--help` and `--version` and no commands yet.
+Run without arguments, it prints the help and exits with status 2, like other usage errors.
+
+## Repository layout
+
+| Path | Contents |
+| --- | --- |
+| `crates/iemod-cli` | The `iemod` executable |
+| `docs/` | Design decisions, threat model and release gates |
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), and [SECURITY.md](SECURITY.md) before reporting a
