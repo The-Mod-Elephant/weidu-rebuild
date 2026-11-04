@@ -18,7 +18,7 @@ Run before pushing; CI runs the same hooks:
 
 ```sh
 hk check --all
-cargo test
+cargo test --workspace --locked
 ```
 
 Local results are evidence, not verification: GitHub Actions is the authoritative gate. In the
