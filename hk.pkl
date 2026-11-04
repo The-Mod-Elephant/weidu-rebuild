@@ -23,6 +23,12 @@ local commit_msg_hooks = new Mapping<String, Step> {
 }
 
 hooks {
+  ["check"] {
+    steps {
+      ...builtins
+      ...local_hooks
+    }
+  }
   ["commit-msg"] {
     steps {
       ...commit_msg_hooks
