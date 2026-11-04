@@ -64,7 +64,8 @@ from the commits since the latest tag:
   Leaving 0.x is an explicit `major` bump.
 - The first release is `v0.1.0`.
 
-Releases are published only by `.github/workflows/release.yml`: run **Release** on `main`, first
+Releases are published only by `.github/workflows/release.yml`, which calls
+`.github/workflows/build.yml` for the per-platform builds: run **Release** on `main`, first
 with `dry_run` enabled. It computes the version, generates `CHANGELOG.md`
 ([Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)) and the release notes, builds and
 smoke-tests every platform, and, with `dry_run` disabled, tags the commit and publishes the
