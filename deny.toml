@@ -1,0 +1,38 @@
+[graph]
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+]
+
+[advisories]
+ignore = []
+
+[licenses]
+# Every entry must be compatible with GPL-3.0, the project's license
+# (https://www.gnu.org/licenses/license-list.html).
+allow = [
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "GPL-3.0-only",
+  "GPL-3.0-or-later",
+  "MIT",
+  "Unicode-3.0",
+]
+confidence-threshold = 0.93
+# The list is a compatibility policy, not an inventory of what is currently used.
+unused-allowed-license = "allow"
+
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
