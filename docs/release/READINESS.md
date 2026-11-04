@@ -1,8 +1,8 @@
 # Release readiness
 
 A release may be published only when every gate below holds. Gates marked *automated* are
-enforced by `.github/workflows/release.yml` (which refuses to publish otherwise); the others are
-checked by the maintainer who starts the workflow.
+enforced by `.github/workflows/release.yml` and the `build.yml` workflow it calls, which refuse to
+publish otherwise; the others are checked by the maintainer who starts the workflow.
 
 ## Gates
 
@@ -13,8 +13,8 @@ checked by the maintainer who starts the workflow.
 | R3 | At least one commit since the last tag requires a release. | *Automated*: the `plan` job refuses when the computed tag already exists. |
 | R4 | The tag `vX.Y.Z` does not exist yet. | *Automated*: checked when planning and again just before publishing. |
 | R5 | CI (`CI gate`, `Conventional commits`, CodeQL) is green on the release commit. | Maintainer: check the commit's status on `main` before starting. |
-| R6 | Every target builds with `--locked` from a clean state and `iemod --version` prints the release version. | *Automated*: `build` matrix smoke test. |
-| R7 | Third-party notices are generated and every dependency license is accepted. | *Automated*: `cargo about generate` in the `notices` job. |
+| R6 | Every target builds with `--locked` from a clean state and `iemod --version` prints the release version. | *Automated*: the `build` matrix smoke test in `build.yml`. |
+| R7 | Third-party notices are generated and every dependency license is accepted. | *Automated*: `cargo about generate` in the `notices` job of `build.yml`. |
 | R8 | A dry run (`dry_run: true`) of the same commit succeeded. | Maintainer. |
 | R9 | No open security advisory affects the release without a fix or a documented decision. | Maintainer: Security tab and `cargo deny` results. |
 | R10 | `SECURITY.md` and `docs/architecture/THREAT_MODEL.md` describe the shipped behaviour. | Maintainer, during review of the changes being released. |
