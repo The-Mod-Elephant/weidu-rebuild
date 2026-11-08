@@ -23,7 +23,7 @@ ordered, not started), **Needs design** (required, but there is no agreed design
 | Nix development shell, hk hooks, repository hygiene, commit linting and hardened workflows | Done | [#1](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/1)–[#9](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/9), [#16](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/16) |
 | Rust as the implementation language | Done | [ADR 0001](docs/adr/0001-rust.md) |
 | Git tags as the only version source | Done (decision) | [ADR 0002](docs/adr/0002-git-tags-as-version-source.md) |
-| Cargo workspace, workspace lints, `cargo deny` policy and the `iemod` CLI scaffold (`--help`, `--version`) | Done | [#14](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/14) |
+| Cargo workspace, `cargo deny` policy and the `iemod` CLI scaffold (`--help`, `--version`) | Done | [#14](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/14) |
 | Tests on every supported platform (`tests.yaml`) | Done | [#17](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/17) |
 | Release builds and artifacts on every supported platform (`build.yaml`) | In review | [#19](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/19) |
 | Dependabot updates with low-risk auto-merge | Merged into the `ci/rust-tests` branch, not yet on `main` | [#11](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/11) |
@@ -67,7 +67,7 @@ Windows coverage of T2 as a known limitation.
   `Immutable`, `Unaligned`), so a record is read in place from the file bytes
   ([review](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/18#discussion_r4506602922)).
   Multi-byte fields use its `little_endian` types, and a buffer that is too short is an error,
-  not a panic. The derives compile under the workspace's `unsafe_code = "deny"`, and its license
+  not a panic. The crate encapsulates the unsafe code that reading in place needs, and its license
   (`BSD-2-Clause OR Apache-2.0 OR MIT`) is accepted by `deny.toml`.
 - Parsers validate every length and offset and return typed errors (T7).
 - Untrusted bytes are escaped before they are displayed (T9).
