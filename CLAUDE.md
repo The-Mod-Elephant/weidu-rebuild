@@ -55,9 +55,9 @@ the authoritative gate.
 - Mods are untrusted input. All game-directory I/O goes through the `iemod-vfs` crate, which is
   confined to one capability-opened game root: no absolute paths, no `..` traversal, no symlink
   escape, and no delete API. Do not add `std::fs` calls on game data elsewhere.
-- `unsafe_code` is denied workspace-wide; a block that truly needs it opts in with
-  `#[allow(unsafe_code)]` and a `// SAFETY:` comment justifying it. Mod scripts must never be
-  able to spawn processes, open network connections, or touch paths outside the game root.
+- Unsafe code is permitted where it is needed but kept to a minimum; prefer crates that
+  encapsulate it, such as `zerocopy`'s derives. Mod scripts must never be able to spawn
+  processes, open network connections, or touch paths outside the game root.
 - Text matching uses the linear-time `regex` crate semantics; no backtracking regex engines.
 - Binary format parsers validate every length and offset before use and return typed errors,
   never panic, on malformed input. Cite the format specification section in comments.
