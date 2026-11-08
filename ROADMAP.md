@@ -23,8 +23,9 @@ ordered, not started), **Needs design** (required, but there is no agreed design
 | Nix development shell, hk hooks, repository hygiene, commit linting and hardened workflows | Done | [#1](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/1)–[#9](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/9), [#16](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/16) |
 | Rust as the implementation language | Done | [ADR 0001](docs/adr/0001-rust.md) |
 | Git tags as the only version source | Done (decision) | [ADR 0002](docs/adr/0002-git-tags-as-version-source.md) |
-| Cargo workspace, workspace lints, `cargo deny` policy and the `iemod` CLI scaffold (`--help`, `--version`) | In review | [#14](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/14) |
-| Tests on every supported platform | In review | [#17](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/17) |
+| Cargo workspace, workspace lints, `cargo deny` policy and the `iemod` CLI scaffold (`--help`, `--version`) | Done | [#14](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/14) |
+| Tests on every supported platform (`tests.yaml`) | Done | [#17](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/17) |
+| Release builds and artifacts on every supported platform (`build.yaml`) | In review | [#19](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/19) |
 | Dependabot updates with low-risk auto-merge | Merged into the `ci/rust-tests` branch, not yet on `main` | [#11](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/11) |
 | git-cliff versioning and changelog, tag-driven `release.yml` and reusable `build.yml` | In review (targets `ci/rust-tests`) | [#12](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/12) |
 
