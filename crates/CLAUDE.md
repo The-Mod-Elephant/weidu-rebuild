@@ -7,6 +7,7 @@ These rules add to the repository-wide `CLAUDE.md`.
   and prints the error; clap's own usage errors keep clap's exit code. Do not invent exit codes.
 - Library code returns typed `thiserror` errors and never panics on input: no `unwrap`,
   `expect` or unchecked indexing on untrusted data (a review rule). Tests may panic.
-- Unit tests live next to the code in a `#[cfg(test)] mod tests`.
+- Unit tests live next to the code in a `#[cfg(test)] mod tests` and test iemod's own
+  behaviour, never that of a dependency such as clap (a review rule).
 - New dependencies must pass `cargo deny check`.
 - Packages have no `version` field; git tags are the version source.
