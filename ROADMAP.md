@@ -61,6 +61,12 @@ Windows coverage of T2 as a known limitation.
 - One struct per file type, with sub-structs for its sections, each citing its
   [IESDP](https://gibberlings3.github.io/iesdp/) page and offsets, as requested in
   [this review thread](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/10#discussion_r4471237815).
+- The structs derive [`zerocopy`](https://docs.rs/zerocopy)'s traits (`FromBytes`, `KnownLayout`,
+  `Immutable`, `Unaligned`), so a record is read in place from the file bytes
+  ([review](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/18#discussion_r4506602922)).
+  Multi-byte fields use its `little_endian` types, and a buffer that is too short is an error,
+  not a panic. The derives compile under the workspace's `unsafe_code = "deny"`, and its license
+  (`BSD-2-Clause OR Apache-2.0 OR MIT`) is accepted by `deny.toml`.
 - Parsers validate every length and offset and return typed errors (T7).
 - Untrusted bytes are escaped before they are displayed (T9).
 - Fuzzing starts with the first complete format parser (T7).
