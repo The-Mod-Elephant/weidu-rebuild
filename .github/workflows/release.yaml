@@ -9,51 +9,71 @@ jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      actions: read
+      contents: write # gh release create
+      actions: read # download the artifacts of the build.yaml run given as run_id
     steps:
+      - name: Require a tag
+        run: |
+          if [ "$GITHUB_REF_TYPE" != tag ]; then
+            echo "::error title=Release must run on a tag::release.yaml was started on ${GITHUB_REF_TYPE} '${GITHUB_REF_NAME}'; start it on a vX.Y.Z tag"
+            exit 1
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 #v8.0.2
         with:
           name: iemod-x86_64-apple-darwin
+          path: dist/iemod-x86_64-apple-darwin
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 #v8.0.2
         with:
           name: iemod-aarch64-apple-darwin
+          path: dist/iemod-aarch64-apple-darwin
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 #v8.0.2
         with:
           name: iemod-x86_64-unknown-linux-musl
+          path: dist/iemod-x86_64-unknown-linux-musl
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 #v8.0.2
         with:
           name: iemod-x86_64-unknown-linux-gnu
+          path: dist/iemod-x86_64-unknown-linux-gnu
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 #v8.0.2
         with:
           name: iemod-aarch64-unknown-linux-gnu
+          path: dist/iemod-aarch64-unknown-linux-gnu
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 #v8.0.2
         with:
           name: iemod-x86_64-pc-windows-msvc.exe
+          path: dist/iemod-x86_64-pc-windows-msvc.exe
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
+      - name: Name the assets
+        # Each artifact holds one file named after the executable (iemod or iemod.exe); the asset
+        # takes the artifact's name so that the targets do not collide.
+        run: |
+          mkdir assets
+          for dir in dist/*/; do
+            name=$(basename "$dir")
+            files=("$dir"*)
+            if [ "${#files[@]}" -ne 1 ] || [ ! -f "${files[0]}" ]; then
+              echo "::error title=Unexpected artifact contents::${name} should hold exactly one file, found: ${files[*]}"
+              exit 1
+            fi
+            mv "${files[0]}" "assets/${name}"
+          done
+          ls -l assets
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            iemod-x86_64-apple-darwin \
-            iemod-aarch64-apple-darwin \
-            iemod-x86_64-unknown-linux-musl \
-            iemod-x86_64-unknown-linux-gnu \
-            iemod-aarch64-unknown-linux-gnu \
-            iemod-x86_64-pc-windows-msvc.exe \
-            --generate-notes
+          gh release create "${GITHUB_REF_NAME}" assets/* --verify-tag --generate-notes
