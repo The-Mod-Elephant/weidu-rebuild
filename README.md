@@ -10,7 +10,8 @@
 A new, safe and fast toolchain for installing and authoring mods for Infinity Engine games.
 
 > [!NOTE]
-> **Status: early scaffolding.** `iemod` is a working title.
+> **Status: early scaffolding.** `iemod` is a working title. See the [roadmap](ROADMAP.md) for
+> what is planned and in review.
 
 ## Goals
 
