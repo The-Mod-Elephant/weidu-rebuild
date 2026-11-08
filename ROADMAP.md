@@ -58,6 +58,8 @@ Windows coverage of T2 as a known limitation.
 
 ### 2. Infinity Engine file formats: Next, after milestone 1
 
+- The format types live in one shared crate that other repositories can use too
+  ([review](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/18#discussion_r4506605123)).
 - One struct per file type, with sub-structs for its sections, each citing its
   [IESDP](https://gibberlings3.github.io/iesdp/) page and offsets, as requested in
   [this review thread](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/10#discussion_r4471237815).
@@ -91,9 +93,10 @@ design or order for them yet.
 
 ## Open questions
 
-- Where the format parsers live: a crate in this workspace, a separately published crate, or an
-  existing models crate
-  ([review thread](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/10#discussion_r4471237815)).
+- Where the shared format-types crate lives, and how other repositories get it: a crate in this
+  workspace published to crates.io (packages are currently `publish = false`), or a crate in its
+  own repository
+  ([review](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/18#discussion_r4506605123)).
 - The final project name: `iemod` is a working title ([README.md](README.md)).
 - What a `1.0.0` release requires. It is not defined yet; the release gates only state that
   `1.0.0` is an explicit graduation (R2 in [READINESS.md](docs/release/READINESS.md)).
