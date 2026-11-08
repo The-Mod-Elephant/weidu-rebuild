@@ -1,4 +1,4 @@
-# Roadmap
+, [#23](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/23) |# Roadmap
 
 This roadmap lists the work that is planned for `iemod`, in the order that has been agreed in
 review, and where each piece stands. It describes intent, not commitments: the project is
@@ -26,7 +26,7 @@ ordered, not started), **Needs design** (required, but there is no agreed design
 | Cargo workspace, `cargo deny` policy and the `iemod` CLI scaffold (`--help`, `--version`) | Done | [#14](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/14) |
 | Tests on every supported platform (`tests.yaml`) | Done | [#17](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/17) |
 | Single root package in place of the `crates/` workspace, and release builds and artifacts on every supported platform (`build.yaml`) | Done | [#19](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/19) |
-| `release.yaml`, which publishes the `build.yaml` artifacts of a given run as a GitHub release | Done, with gaps listed under [Release track](#release-track) | [#20](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/20) |
+| Tag-driven release: `build.yaml` builds a pushed `vX.Y.Z` tag and starts `release.yaml`, which publishes that run's executables as a GitHub release | Done | [#20](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/20) |
 | Dependabot updates with low-risk auto-merge | Not on `main`: #11 was merged into the `ci/rust-tests` branch, which was deleted without being merged | [#11](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/11) |
 | git-cliff versioning and changelog | Dropped: #12 was closed unmerged, and #20 provides the release workflow instead | [#12](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/12) |
 
@@ -77,17 +77,13 @@ Windows coverage of T2 as a known limitation.
 
 ## Release track
 
-The release workflow from [#20](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/20) is on
-`main`. The first `0.y.z` release can be made once every gate in
-[READINESS.md](docs/release/READINESS.md) holds. Until then there are no tags and no published
-binaries. Known gaps on `main`:
+The release flow from [#20](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/20) is on `main`
+(see [ADR 0002](docs/adr/0002-git-tags-as-version-source.md)). The first `0.y.z` release can be
+made once every gate in [READINESS.md](docs/release/READINESS.md) holds. Until then there are no
+tags and no published binaries. Remaining release work:
 
-- `build.yaml` runs on `push` to `main` only, so pushing a tag does not start it, and its
-  `trigger-release` job (`if: startsWith(github.ref, 'refs/tags/')`) cannot run. GitHub documents
-  that a `push` trigger with only a `branches` filter "won't run for events affecting the
-  undefined Git ref"
-  ([workflow syntax, `on.push.<branches|tags>`](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)).
-- ADR 0002 and READINESS.md still describe the release process that #12 proposed.
+- Third-party notices are not generated or shipped yet, so gate R6 does not hold.
+- `SHA256SUMS`, build-provenance attestations and a `release` environment (threat-model T11).
 
 ## Needs design
 
