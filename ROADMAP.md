@@ -71,12 +71,6 @@ Windows coverage of T2 as a known limitation.
 - Untrusted bytes are escaped before they are displayed (T9).
 - Fuzzing starts with the first complete format parser (T7).
 
-### 3. `iemod doctor`: Next, after milestones 1 and 2
-
-The first command. The
-[#10 split plan](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/10) adds it "once vfs and
-formats exist".
-
 ## Release track
 
 The first `0.y.z` release can be made once the release workflow
