@@ -1,13 +1,18 @@
-[workspace]
-members = ["crates/*"]
-resolver = "3"
-
-[workspace.package]
+[package]
+name = "iemod"
+version = "0.0.1"
+authors = [ "dark0dave", "4Luke4" ]
 edition = "2024"
-publish = false
+license = "GPL-3.0 - GNU General Public License v3.0"
+readme = "README.md"
+description = "Weidu Rebuild"
+homepage = "https://github.com/The-Mod-Elephant/weidu-rebuild"
+categories = [ "command-line-interface", "filesystem" ]
+
+[dependencies]
+clap = { version = "4.6.7", features = ["derive"] }
 
 [workspace.lints.rust]
-# Opting in requires `#[allow(unsafe_code)]` and a `// SAFETY:` comment (CLAUDE.md).
 unsafe_code = "deny"
 
 [workspace.lints.clippy]

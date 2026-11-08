@@ -14,6 +14,7 @@
         "aarch64-darwin"
       ];
       forEachSystem = f: nixpkgs.lib.genAttrs systems (system: f system);
+      pkgsFor = nixpkgs.legacyPackages;
     in
     {
       devShells = forEachSystem (
@@ -49,6 +50,9 @@
             };
         }
       );
+      packages = forEachSystem (system: {
+        default = pkgsFor.${system}.callPackage ./default.nix { };
+      });
       formatter = forEachSystem (system: nixpkgs.${system}.nixfmt);
     };
 }

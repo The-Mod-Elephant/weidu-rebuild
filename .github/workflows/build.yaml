@@ -1,0 +1,91 @@
+name: build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+      actions: read
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            suffix: ''
+            pre: ''
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            suffix: ''
+            pre: ''
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            suffix: ''
+            pre: 'sudo apt-get install -yqqq musl-tools'
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            suffix: ''
+            pre: ''
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            suffix: ''
+            pre: ''
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            suffix: .exe
+            pre: ''
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: build
+        run: |
+          ${{ matrix.pre }}
+          rustup target add ${{ matrix.target }}
+          cargo test --workspace --target ${{ matrix.target }}
+          cargo build --target ${{ matrix.target }} --release --workspace
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: iemod-${{ matrix.target }}${{ matrix.suffix }}
+          path: ./target/${{ matrix.target }}/release/iemod${{ matrix.suffix }}
+          if-no-files-found: error
+  build-nix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
+      - name: nixcache
+        uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7.0.2
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 5G
+          save: ${{ github.ref == 'refs/heads/main' }}
+      - name: build-nix
+        env:
+          RUSTFLAGS: -D warnings
+        run: nix build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: iemod-nix
+          path: ./result/bin/iemod
+          if-no-files-found: error

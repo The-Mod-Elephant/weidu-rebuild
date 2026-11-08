@@ -1,7 +1,6 @@
 name: lint
 on:
   pull_request:
-    # `edited` re-checks the title, which becomes the squash-merge commit.
     types: [opened, edited, reopened, synchronize]
   push:
     branches: [main]
@@ -18,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read # check out the repository
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -30,7 +29,6 @@ jobs:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
           gc-max-store-size-linux: 5G
-          # Saved from main only: pull requests can restore main's caches, not each other's.
           save: ${{ github.ref == 'refs/heads/main' }}
       - name: pre-commit
         shell: 'nix develop -c bash -e {0}'

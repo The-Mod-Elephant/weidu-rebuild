@@ -10,3 +10,4 @@ plan.md
 
 # Rust build output
 /target
+/result
