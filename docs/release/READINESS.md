@@ -11,10 +11,10 @@ tag.
 | # | Gate | How it is enforced |
 | --- | --- | --- |
 | R1 | The release is made from a `vX.Y.Z` tag on a commit of `main`. | *Automated* in part: `build.yaml` runs for tags matching `v[0-9]+.[0-9]+.[0-9]+` only, and `release.yaml` passes `--verify-tag` to `gh release create`, which aborts unless the tag exists. Maintainer: the tagged commit is on `main`. |
-| R2 | `X.Y.Z` follows SemVer 2.0.0 for the changes since the previous tag (or is an explicit `1.0.0` graduation). | Maintainer. |
+| R2 | The `version` in `Cargo.toml` is `X.Y.Z`, the tag is `vX.Y.Z`, and `X.Y.Z` follows SemVer 2.0.0 for the changes since the previous tag (or is an explicit `1.0.0` graduation). | Maintainer. |
 | R3 | The tag `vX.Y.Z` does not exist yet. | Maintainer: `git ls-remote --tags origin`. |
 | R4 | CI (`pre-commit`, `tests`, `build`, CodeQL) is green on the release commit. | Maintainer: check the commit's status on `main` before tagging. |
-| R5 | Every target builds without restored caches, and `iemod --version` prints `iemod X.Y.Z`. | *Automated* in part: tag builds skip the Cargo and Nix caches. Maintainer: run a published executable with `--version`. |
+| R5 | Every target builds, and `iemod --version` prints `iemod X.Y.Z`. | *Automated* in part: `build.yaml` builds every target for the tag. Maintainer: run a published executable with `--version`. |
 | R6 | Third-party notices are shipped and every dependency license is accepted. | `cargo deny` checks the licenses (`lint.yml`). **Not met yet**: no notices are generated or shipped. |
 | R7 | No open security advisory affects the release without a fix or a documented decision. | Maintainer: Security tab and `cargo deny` results. |
 | R8 | `SECURITY.md` and `docs/architecture/THREAT_MODEL.md` describe the shipped behaviour. | Maintainer, during review of the changes being released. |
