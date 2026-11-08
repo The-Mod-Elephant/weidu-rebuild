@@ -38,15 +38,23 @@ pull request. Each milestone is its own pull request with its tests inline
 
 ### 1. Sandboxed game directory (`iemod-vfs`): Next
 
-The only crate that may touch game files ([ADR 0003](docs/adr/0003-sandboxed-vfs.md)).
+The only crate that may touch game files ([ADR 0003](docs/adr/0003-sandboxed-vfs.md)). It
+should be built on an existing crate rather than written from scratch
+([review](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/18#discussion_r4506602116)):
 
-- `RelPath`: lexical, portable path validation (threats T1 and T6).
-- `GameRoot`: every access resolved through one capability-opened directory with `cap-std`
-  (T2).
-- ASCII case-insensitive lookups that fail on ambiguity (T6).
-- Atomic writes through a temporary file and rename, and no delete API (T3, T4).
-- Follow-up: a Windows-specific symlink-escape test. Until one exists, the threat model lists
-  Windows coverage of T2 as a known limitation.
+1. Find an existing crate that provides the sandbox. ADR 0003 already plans to use `cap-std`
+   for path resolution. The candidates are measured against these requirements:
+   - lexical, portable path validation (threats T1 and T6);
+   - every access resolved inside one capability-opened directory (T2);
+   - ASCII case-insensitive lookups that fail on ambiguity (T6);
+   - atomic writes through a temporary file and rename, and no delete API (T3, T4).
+2. Record the choice, its license and its platform support in an ADR that amends ADR 0003. The
+   crate must also pass `cargo deny check`.
+3. `iemod-vfs` wraps the chosen crate and adds only what it lacks, so all game-directory I/O
+   still goes through `iemod-vfs`.
+
+Follow-up: a Windows-specific symlink-escape test. Until one exists, the threat model lists
+Windows coverage of T2 as a known limitation.
 
 ### 2. Infinity Engine file formats: Next, after milestone 1
 
