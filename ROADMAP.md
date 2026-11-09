@@ -56,6 +56,10 @@ written from scratch
 3. The `vfs` module wraps the chosen crate and adds only what it lacks, so all game-directory
    I/O still goes through it.
 
+| Part | Status | Source |
+| --- | --- | --- |
+| `RelPath`, the lexical, portable path validation (T1, T6). No candidate crate rejects the names Windows cannot represent on every platform with a typed error, so the module implements it. | In review | [#24](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/24) |
+
 Follow-up: a Windows-specific symlink-escape test. Until one exists, the threat model lists
 Windows coverage of T2 as a known limitation.
 
