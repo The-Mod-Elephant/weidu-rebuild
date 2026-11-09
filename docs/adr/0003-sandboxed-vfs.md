@@ -31,3 +31,9 @@ Create the `iemod-vfs` crate as the only component allowed to access game files:
   tool itself installed; it must be designed explicitly rather than by adding a general delete.
 - Each lookup currently lists one directory per path component; caching directory listings is a
   planned optimisation for large installs.
+
+## Amendment (2026-11-09)
+
+[#19](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/19) replaced the Cargo workspace
+with a single root package, so the component this decision calls the `iemod-vfs` crate is the
+`vfs` module (`src/vfs/`). The decision is otherwise unchanged.

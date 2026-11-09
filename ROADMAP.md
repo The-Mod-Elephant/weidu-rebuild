@@ -38,10 +38,11 @@ pull request. Each milestone is its own pull request with its tests inline
 ([`crates/CLAUDE.md` as of 12dfb72](https://github.com/The-Mod-Elephant/weidu-rebuild/blob/12dfb72/crates/CLAUDE.md),
 removed in [#19](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/19)).
 
-### 1. Sandboxed game directory (`iemod-vfs`): Next
+### 1. Sandboxed game directory (`vfs` module): Next
 
-The only crate that may touch game files ([ADR 0003](docs/adr/0003-sandboxed-vfs.md)). It
-should be built on an existing crate rather than written from scratch
+The only module that may touch game files (`src/vfs/`,
+[ADR 0003](docs/adr/0003-sandboxed-vfs.md)). It should be built on an existing crate rather than
+written from scratch
 ([review](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/18#discussion_r4506602116)):
 
 1. Find an existing crate that provides the sandbox. ADR 0003 already plans to use `cap-std`
@@ -52,8 +53,8 @@ should be built on an existing crate rather than written from scratch
    - atomic writes through a temporary file and rename, and no delete API (T3, T4).
 2. Record the choice, its license and its platform support in an ADR that amends ADR 0003. The
    crate must also pass `cargo deny check`.
-3. `iemod-vfs` wraps the chosen crate and adds only what it lacks, so all game-directory I/O
-   still goes through `iemod-vfs`.
+3. The `vfs` module wraps the chosen crate and adds only what it lacks, so all game-directory
+   I/O still goes through it.
 
 Follow-up: a Windows-specific symlink-escape test. Until one exists, the threat model lists
 Windows coverage of T2 as a known limitation.

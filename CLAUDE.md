@@ -52,9 +52,9 @@ the authoritative gate.
 
 ## Product and architecture invariants
 
-- Mods are untrusted input. All game-directory I/O goes through the `iemod-vfs` crate, which is
-  confined to one capability-opened game root: no absolute paths, no `..` traversal, no symlink
-  escape, and no delete API. Do not add `std::fs` calls on game data elsewhere.
+- Mods are untrusted input. All game-directory I/O goes through the `vfs` module (`src/vfs/`),
+  which is confined to one capability-opened game root: no absolute paths, no `..` traversal, no
+  symlink escape, and no delete API. Do not add `std::fs` calls on game data elsewhere.
 - Unsafe code is permitted where it is needed but kept to a minimum; prefer crates that
   encapsulate it, such as `zerocopy`'s derives. Mod scripts must never be able to spawn
   processes, open network connections, or touch paths outside the game root.
