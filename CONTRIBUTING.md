@@ -77,6 +77,9 @@ breaking change.
 | --- | --- | --- |
 | `lint.yml` | `pre-commit` | Every hk hook on all files, then the pull request title; on `main` it also refreshes the Nix cache |
 | `codeql.yml` | `Analyze (...)` | CodeQL code scanning |
+| `tests.yaml` | `build (<os>, <target>, ...)` | `cargo test` on every supported target |
+| `build.yaml` | `build (<os>, <target>, ...)`, `build-nix` | Tests and release builds per target, uploaded as artifacts, and `nix build` |
+| `release.yaml` | `release` | Started with a `build.yaml` run ID; publishes that run's artifacts as a GitHub release |
 | `devcontainer.yml` | `Build dev container` | Builds and provisions the dev container, then runs `hk check --all` and the tests inside it; skipped on pull requests that do not change its inputs, and run weekly |
 
 Repository admins should make `pre-commit` a required status check in the `main` ruleset.

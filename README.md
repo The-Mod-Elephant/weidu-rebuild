@@ -21,7 +21,7 @@ A new, safe and fast toolchain for installing and authoring mods for Infinity En
 - **Fast.** Minimal I/O and linear-time pattern matching.
 - **Predictable.** One coherent command-line interface with identical behaviour on Windows, macOS
   and Linux.
-- **Easy to build.** A standard Cargo workspace and a Nix development shell.
+- **Easy to build.** A standard Cargo package and a Nix development shell.
 
 ## Building and usage
 
@@ -38,7 +38,7 @@ Run without arguments, it prints the help and exits with status 2, like other us
 
 | Path | Contents |
 | --- | --- |
-| `crates/iemod-cli` | The `iemod` executable |
+| `src/` | The `iemod` executable |
 | `docs/` | Design decisions, threat model and release gates |
 
 ## Contributing

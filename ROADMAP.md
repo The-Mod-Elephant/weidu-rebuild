@@ -1,4 +1,4 @@
-# Roadmap
+, [#23](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/23) |# Roadmap
 
 This roadmap lists the work that is planned for `iemod`, in the order that has been agreed in
 review, and where each piece stands. It describes intent, not commitments: the project is
@@ -23,18 +23,20 @@ ordered, not started), **Needs design** (required, but there is no agreed design
 | Nix development shell, hk hooks, repository hygiene, commit linting and hardened workflows | Done | [#1](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/1)–[#9](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/9), [#16](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/16) |
 | Rust as the implementation language | Done | [ADR 0001](docs/adr/0001-rust.md) |
 | Git tags as the only version source | Done (decision) | [ADR 0002](docs/adr/0002-git-tags-as-version-source.md) |
-| Cargo workspace, workspace lints, `cargo deny` policy and the `iemod` CLI scaffold (`--help`, `--version`) | Done | [#14](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/14) |
+| Cargo workspace, `cargo deny` policy and the `iemod` CLI scaffold (`--help`, `--version`) | Done | [#14](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/14) |
 | Tests on every supported platform (`tests.yaml`) | Done | [#17](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/17) |
-| Release builds and artifacts on every supported platform (`build.yaml`) | In review | [#19](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/19) |
-| Dependabot updates with low-risk auto-merge | Merged into the `ci/rust-tests` branch, not yet on `main` | [#11](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/11) |
-| git-cliff versioning and changelog, tag-driven `release.yml` and reusable `build.yml` | In review (targets `ci/rust-tests`) | [#12](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/12) |
+| Single root package in place of the `crates/` workspace, and release builds and artifacts on every supported platform (`build.yaml`) | Done | [#19](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/19) |
+| Tag-driven release: `build.yaml` builds a pushed `vX.Y.Z` tag and starts `release.yaml`, which publishes that run's executables as a GitHub release | Done | [#20](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/20) |
+| Dependabot updates with low-risk auto-merge | Not on `main`: #11 was merged into the `ci/rust-tests` branch, which was deleted without being merged | [#11](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/11) |
+| git-cliff versioning and changelog | Dropped: #12 was closed unmerged, and #20 provides the release workflow instead | [#12](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/12) |
 
 ## Milestones
 
 The order below is the one agreed when
 [#10](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/10) was split into one concern per
 pull request. Each milestone is its own pull request with its tests inline
-([crates/CLAUDE.md](crates/CLAUDE.md)).
+([`crates/CLAUDE.md` as of 12dfb72](https://github.com/The-Mod-Elephant/weidu-rebuild/blob/12dfb72/crates/CLAUDE.md),
+removed in [#19](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/19)).
 
 ### 1. Sandboxed game directory (`iemod-vfs`): Next
 
@@ -67,7 +69,7 @@ Windows coverage of T2 as a known limitation.
   `Immutable`, `Unaligned`), so a record is read in place from the file bytes
   ([review](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/18#discussion_r4506602922)).
   Multi-byte fields use its `little_endian` types, and a buffer that is too short is an error,
-  not a panic. The derives compile under the workspace's `unsafe_code = "deny"`, and its license
+  not a panic. The crate encapsulates the unsafe code that reading in place needs, and its license
   (`BSD-2-Clause OR Apache-2.0 OR MIT`) is accepted by `deny.toml`.
 - Parsers validate every length and offset and return typed errors (T7).
 - Untrusted bytes are escaped before they are displayed (T9).
@@ -75,9 +77,13 @@ Windows coverage of T2 as a known limitation.
 
 ## Release track
 
-The first `0.y.z` release can be made once the release workflow
-([#12](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/12)) is on `main` and every gate in
-[READINESS.md](docs/release/READINESS.md) holds. Until then there are no published binaries.
+The release flow from [#20](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/20) is on `main`
+(see [ADR 0002](docs/adr/0002-git-tags-as-version-source.md)). The first `0.y.z` release can be
+made once every gate in [READINESS.md](docs/release/READINESS.md) holds. Until then there are no
+tags and no published binaries. Remaining release work:
+
+- Third-party notices are not generated or shipped yet, so gate R6 does not hold.
+- `SHA256SUMS`, build-provenance attestations and a `release` environment (threat-model T11).
 
 ## Needs design
 
