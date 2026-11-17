@@ -43,6 +43,9 @@ step "direnv configuration" configure_direnv
 step "git hooks (hk install)" nix develop --command hk install
 step "git commit template" git config commit.template .gitmessage
 
+step "Claude Code CLI" bash .devcontainer/install-claude-code.sh
+
 log "tool versions:"
 nix develop --command bash -c 'rustc --version; cargo --version; hk --version; cargo deny --version'
+claude --version
 log "provisioning complete"
