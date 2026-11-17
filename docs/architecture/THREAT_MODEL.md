@@ -39,8 +39,13 @@ not on `main` yet; [ROADMAP.md](../../ROADMAP.md) tracks where it will land.
 | T9 | **Terminal injection** through file contents echoed in diagnostics. | Untrusted bytes are escaped before display (e.g. `Header`'s `Display`). | Planned (format parsers) |
 | T10 | **Supply-chain compromise** of dependencies or CI. | `Cargo.lock` with `--locked` builds; `cargo deny` checks RustSec advisories, licenses and sources; Dependabot with a cooldown; actions pinned by SHA; minimal workflow permissions; zizmor and CodeQL scanning. | Partially implemented: `Cargo.lock`, `cargo deny`, SHA-pinned actions, minimal permissions, zizmor and CodeQL are on `main`; Dependabot is on the `ci/rust-tests` branch ([#11](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/11)), not yet on `main` |
 | T11 | **Tampered release binaries**. | Release builds only in `release.yml`, from scratch without caches, at the verified commit; `SHA256SUMS` and Sigstore-signed build-provenance attestations; optional reviewer approval through the `release` environment. | Planned (`release.yml`, in review in [#12](https://github.com/The-Mod-Elephant/weidu-rebuild/pull/12), which targets `ci/rust-tests`) |
+| T12 | **Compromised development environment**: a tampered dev container image, Nix installer or Claude Code binary in a contributor's Codespace. | The base image and Nix feature are pinned by digest and the Nix version is fixed; every other tool comes from the locked flake. Claude Code intentionally follows its unpinned `stable` channel, but `.devcontainer/install-claude-code.sh` runs a binary only after checking the signing-key fingerprint, the GPG signature on the release manifest and the binary's SHA-256. The dev container is not part of the release path (T11). | Implemented (`.devcontainer/`, `devcontainer.yml`) |
 
 ## Known limitations
+
+- After installation, Claude Code in the dev container updates itself through its own updater;
+  the GPG check of T12 applies to the installed version only, which is the one the creation log
+  records.
 
 - Reads through a hard link that already exists in the game directory return that file's
   contents; the sandbox prevents writes through it, not reads.
