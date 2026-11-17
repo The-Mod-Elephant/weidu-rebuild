@@ -39,6 +39,7 @@
                 rust-analyzer
                 rustc
                 rustfmt
+                shellcheck
                 yamlfmt
                 zizmor
               ];
