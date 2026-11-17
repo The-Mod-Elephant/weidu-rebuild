@@ -1,0 +1,70 @@
+name: devcontainer
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Claude Code follows its stable channel unpinned; a weekly build surfaces installer drift.
+    - cron: "41 5 * * 3"
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: devcontainer-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  changes:
+    name: Detect dev container changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read # Read the repository to diff the pull request.
+    outputs:
+      devcontainer: ${{ steps.diff.outputs.devcontainer }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "devcontainer=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- \
+              .devcontainer flake.nix flake.lock hk.pkl .github/workflows/devcontainer.yml); then
+            echo "::error title=Cannot diff pull request::git diff $BASE_SHA $HEAD_SHA failed"
+            exit 1
+          fi
+          if [ -n "$changed" ]; then
+            echo "devcontainer=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "devcontainer=false" >> "$GITHUB_OUTPUT"
+          fi
+  devcontainer:
+    name: Build dev container
+    needs: changes
+    if: needs.changes.outputs.devcontainer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read # Check out the repository that is mounted into the container.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build, provision and check
+        uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450
+        with:
+          push: never
+          runCmd: |
+            set -euo pipefail
+            trap 'echo "::error title=Dev container check failed::$BASH_COMMAND exited non-zero"' ERR
+            cat ~/.cache/devcontainer/post-create.log
+            claude --version
+            nix develop --command hk check --all
+            nix develop --command cargo test --workspace --locked

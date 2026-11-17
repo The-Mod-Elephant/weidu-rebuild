@@ -11,6 +11,7 @@ local builtins = new Mapping<String, Step> {
   ["check-merge-conflict"] = Builtins.check_merge_conflict
   ["end-of-file-fixer"] = Builtins.newlines
   ["nix-fmt"] = Builtins.nix_fmt
+  ["shellcheck"] = Builtins.shellcheck
   ["trailing-whitespace"] = Builtins.trailing_whitespace
   ["yamlfmt"] = Builtins.yamlfmt
   ["zizmor"] = Builtins.zizmor
